@@ -20,16 +20,21 @@ const clearInput = () => {
 
 // Change positive to negative & vice versa
 const changeSign = () => {
+	const lastItem = currentInput[currentInput.length - 1];
 	if (currentNumber === '0' || currentNumber === '' ||
 			inputDisplay.innerHTML === 'ERROR' || inputDisplay.innerHTML === '0') {
 		return;
 	}
 	if (currentNumber.includes('-')) {
 		currentNumber = currentNumber.replace('-', '');
+	} else if (lastItem === '-') {
+		currentInput.pop();
+		currentInput.push('+');
 	} else {
 		currentNumber = '-' + currentNumber;
 	}
 
+	// Update UI
 	const inputString = inputDisplay.innerHTML;
 	let reversedString = reverseString(inputString);
 	let newString;
@@ -72,14 +77,14 @@ const insertRadical = () => {
 
 // Collect input data and calculate result
 const addDigit = (digit) => {
-	if ((currentNumber.includes('.') || currentNumber === '') && digit === '.') {
+	if (currentNumber.includes('.') && digit === '.') {
 		return;
 	}
 	if (powered) {
 		return;
 	} // not letting user further append the number that has already been raised
 
-	if (inputDisplay.innerHTML === '0' ||
+	if ((inputDisplay.innerHTML === '0' && digit !== '.') ||
 			inputDisplay.innerHTML === 'ERROR') {
 		inputDisplay.innerHTML = '';
 	} // Remove default 0 and ERROR from display
@@ -139,6 +144,55 @@ const addOperator = (operator) => {
 	console.log(currentInput);
 };
 
+const calculate = (input) => {
+	let oldArray = input;
+	let newArray = [];
+	// Calculate multiplications and divisions first
+	while (oldArray.includes('*') || oldArray.includes('/')) {
+		let indexToCalc = oldArray.findIndex(element => element === '*' || element === '/');
+		for (let i = 0; i < (indexToCalc - 1); i++) {
+			newArray.push(oldArray[i]);
+		}
+		let newItem;
+		if (oldArray[indexToCalc] === '*') {
+			newItem = oldArray[indexToCalc - 1] * oldArray[indexToCalc + 1];
+		} else if (oldArray[indexToCalc] === '/') {
+			newItem = oldArray[indexToCalc - 1] / oldArray[indexToCalc + 1];
+		}
+		newArray.push(newItem);
+		for (let i = indexToCalc + 2; i < oldArray.length; i++) {
+			newArray.push(oldArray[i]);
+		}
+		oldArray = newArray;
+		newArray = [];
+	}
+	// Then do additions and subtractions
+	while (oldArray.includes('+') || oldArray.includes('-')) {
+		let indexToCalc = oldArray.findIndex(element => element === '+' || element === '-');
+		for (let i = 0; i < (indexToCalc - 1); i++) {
+			newArray.push(oldArray[i]);
+		}
+		let newItem;
+		if (oldArray[indexToCalc] === '+') {
+			newItem = parseFloat(oldArray[indexToCalc - 1]) +
+			parseFloat(oldArray[indexToCalc + 1]);
+		} else if (oldArray[indexToCalc] === '-') {
+			newItem = parseFloat(oldArray[indexToCalc - 1]) -
+			parseFloat(oldArray[indexToCalc + 1]);
+		}
+		newArray.push(newItem);
+		for (let i = indexToCalc + 2; i < oldArray.length; i++) {
+			newArray.push(oldArray[i]);
+		}
+		oldArray = newArray;
+		newArray = [];
+	}
+	const result = oldArray[0];
+	console.log(result);
+	return result;
+};
+
+// Actually calculating output
 const performCalc = () => {
 	if ((currentInput.length === 0 && currentNumber === '') ||
 		inputDisplay.innerHTML === 'ERROR') {
@@ -153,12 +207,14 @@ const performCalc = () => {
 			currentInput[lastIndex] === '*' ||
 			currentInput[lastIndex] === '/') {
 		currentInput.pop();
-	}
+	} // If the last input element is an operator, pop it out
 
-	const stringToCalc = currentInput.join('');
-	const calcResult = eval(stringToCalc);
+	let calcResult = calculate(currentInput);
 // as we only have numerical expression as input, eval() shouldn't be harmful
+	calcResult = (Math.round(calcResult * Math.pow(10, 12))) /
+	Math.pow(10, 12); // Round down to 12 decimals at max
 	inputDisplay.innerHTML = calcResult;
+	console.log('result is ' + calcResult);
 	if (calcResult === Infinity || isNaN(calcResult)) {
 		currentNumber = '';
 		clearInput();
