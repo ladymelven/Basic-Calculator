@@ -1,5 +1,5 @@
 # Basic-Calculator
-A JS calculator with some basic styling. Does arithmetics, square root and square. Can process numerical expressions.
+A JavaScript calculator with some basic styling. Does arithmetics, square root and square. Can process numerical expressions.
 
 This is my first fully independent project (that is, no tutorials or peeking at how-tos, just using what I learned and some hard googling =) ).
 Looking forward to any feedback, please share your thoughts and critique!
